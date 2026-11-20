@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Информатика 3 класс: Интерфейс текстового процессора. Основы редактирования текста</title>
+  <style>
+    :root {
+      --bg: #f0f9ff;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --accent: #f59e0b;
+      --accent-light: #fef3c7;
+      --success: #059669;
+      --success-light: #d1fae5;
+      --danger: #dc2626;
+      --danger-light: #fee2e2;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --border: #bae6fd;
+      --radius: 20px;
+      --shadow: 0 6px 24px rgba(2, 132, 199, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 16.5px;
+      padding-bottom: 60px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(8px);
+      border-bottom: 2px solid var(--border);
+      padding: 12px 16px;
+    }
+
+    .topbar-inner {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    .topbar-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      font-weight: 800;
+      font-size: 0.9rem;
+      padding: 5px 14px;
+      border-radius: 999px;
+    }
+
+    .timer-box {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: var(--surface-soft);
+      border: 1px solid #cbd5e1;
+      padding: 5px 14px;
+      border-radius: 999px;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 10px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      transition: width 0.35s ease;
+    }
+
+    .nav-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-top: 10px;
+      scrollbar-width: none;
+    }
+
+    .nav-pills::-webkit-scrollbar {
+      display: none;
+    }
+
+    .nav-pill {
+      border: 2px solid #cbd5e1;
+      background: var(--surface);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.86rem;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+
+    .nav-pill.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .nav-pill.done {
+      border-color: var(--success);
+      color: var(--success);
+      background: var(--success-light);
+    }
+
+    .nav-pill.active.done {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 20px auto 0;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 2px solid #ffffff;
+    }
+
+    .module {
+      display: none;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .module.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 1.56rem;
+      line-height: 1.25;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
+    }
+
+    h2 {
+      font-size: 1.34rem;
+      margin-bottom: 12px;
+      color: var(--primary-dark);
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      margin: 16px 0 8px;
+    }
+
+    p {
+      margin-bottom: 12px;
+    }
+
+    .time-tag {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #b45309;
+      background: var(--accent-light);
+      padding: 4px 12px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
+
+    .callout {
+      background: var(--primary-light);
+      border-left: 5px solid var(--primary);
+      padding: 14px 16px;
+      border-radius: 0 14px 14px 0;
+      margin: 14px 0;
+    }
+
+    .callout.warn {
+      background: var(--accent-light);
+      border-left-color: var(--accent);
+    }
+
+    .callout.success {
+      background: var(--success-light);
+      border-left-color: var(--success);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 14px;
+      margin: 14px 0;
+    }
+
+    .info-box {
+      background: var(--surface-soft);
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 15px;
+    }
+
+    .info-box strong {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 6px;
+      color: var(--primary-dark);
+    }
+
+    .interactive-zone {
+      background: #f8fafc;
+      border: 3px dashed #7dd3fc;
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 18px;
+    }
+
+    .interactive-title {
+      font-weight: 800;
+      font-size: 1.12rem;
+      color: var(--primary-dark);
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 20px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e1;
+    }
+
+    .btn-success {
+      background: var(--success);
+    }
+
+    .btn-success:hover {
+      background: #047857;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: #b91c1c;
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+      border-radius: 10px;
+    }
+
+    .nav-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 2px solid #e2e8f0;
+      flex-wrap: wrap;
+    }
+
+    .input-field {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      font-size: 1.02rem;
+      margin: 8px 0 14px;
+      font-family: inherit;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    /* Макет окна текстового процессора (Модуль 1) */
+    .mock-window {
+      border: 3px solid #64748b;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #e2e8f0;
+      margin: 12px 0;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.1);
+    }
+
+    .mw-part {
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .mw-part:hover {
+      filter: brightness(0.96);
+    }
+
+    .mw-part.selected-part {
+      outline: 3px solid #f59e0b;
+      outline-offset: -3px;
+    }
+
+    .mw-titlebar {
+      background: #1d4ed8;
+      color: #ffffff;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .mw-win-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mw-win-btn {
+      background: rgba(255, 255, 255, 0.22);
+      padding: 2px 9px;
+      border-radius: 5px;
+      font-size: 0.85rem;
+    }
+
+    .mw-ribbon {
+      background: #f8fafc;
+      border-bottom: 2px solid #cbd5e1;
+      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .mw-tool-chip {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+
+    .mw-body {
+      display: flex;
+      min-height: 155px;
+      padding: 14px;
+      gap: 10px;
+    }
+
+    .mw-page {
+      flex: 1;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 16px;
+      font-size: 1.02rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .blink-cursor {
+      display: inline-block;
+      width: 2.5px;
+      height: 1.15em;
+      background: #dc2626;
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    .mw-scrollbar {
+      width: 18px;
+      background: #cbd5e1;
+      border-radius: 999px;
+      padding: 3px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .mw-scroll-thumb {
+      height: 55px;
+      background: #64748b;
+      border-radius: 999px;
+    }
+
+    .mw-statusbar {
+      background: #f1f5f9;
+      border-top: 2px solid #cbd5e1;
+      padding: 6px 14px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* Карточки сортировки */
+    .sort-item {
+      background: var(--surface);
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .sort-item-text {
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+
+    .sort-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .choice-btn {
+      background: var(--surface-soft);
+      color: var(--text);
+      border: 2px solid #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .choice-btn:hover {
+      background: #e2e8f0;
+    }
+
+    .choice-btn.selected {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .choice-btn.correct {
+      background: var(--success);
+      color: #fff;
+      border-color: var(--success);
+    }
+
+    .choice-btn.wrong {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    /* Симулятор Backspace / Delete (Модуль 2) */
+    .cursor-stage {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 1.7rem;
+      font-weight: 800;
+      padding: 18px 14px;
+      border-radius: 14px;
+      text-align: center;
+      letter-spacing: 3px;
+      margin: 10px 0;
+    }
+
+    .stage-cursor {
+      color: #f59e0b;
+      font-weight: 900;
+    }
+
+    /* Живой редактор практикума (Модуль 3) */
+    .editor-frame {
+      background: #ffffff;
+      border: 2px solid #94a3b8;
+      border-radius: 14px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+
+    .editor-head {
+      background: #f1f5f9;
+      border-bottom: 2px solid #cbd5e1;
+      padding: 8px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .editor-area {
+      width: 100%;
+      min-height: 120px;
+      border: none;
+      padding: 14px;
+      font-size: 1.08rem;
+      font-family: inherit;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+    }
+
+    /* Тест */
+    .quiz-q {
+      background: var(--surface-soft);
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    .quiz-opt {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 11px 14px;
+      margin-top: 8px;
+      border: 2px solid #cbd5e1;
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.96rem;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .quiz-opt:hover {
+      border-color: var(--primary);
+    }
+
+    .quiz-opt.selected {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    .quiz-opt.correct {
+      border-color: var(--success);
+      background: var(--success-light);
+      color: #065f46;
+      font-weight: 800;
+    }
+
+    .quiz-opt.wrong {
+      border-color: var(--danger);
+      background: var(--danger-light);
+      color: #991b1b;
+    }
+
+    /* Грамота */
+    .cert-box {
+      border: 4px solid var(--accent);
+      background: linear-gradient(135deg, #ffffff 0%, #fef3c7 100%);
+      border-radius: 22px;
+      padding: 26px;
+      text-align: center;
+      margin-top: 18px;
+    }
+
+    .cert-grade {
+      display: inline-block;
+      font-size: 1.7rem;
+      font-weight: 900;
+      color: var(--success);
+      background: var(--success-light);
+      border: 2px dashed var(--success);
+      padding: 10px 26px;
+      border-radius: 14px;
+      margin: 12px 0;
+    }
+
+    .feedback {
+      margin-top: 10px;
+      font-weight: 700;
+      font-size: 0.96rem;
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 16px; }
+      h1 { font-size: 1.35rem; }
+      h2 { font-size: 1.18rem; }
+      .cursor-stage { font-size: 1.35rem; letter-spacing: 1px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="topbar-row">
+        <span class="badge">Информатика • 3 класс</span>
+        <span class="timer-box" id="timerDisplay">Время урока: 00:00 / 45:00</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressBar"></div>
+      </div>
+      <nav class="nav-pills" id="navPills">
+        <button class="nav-pill active" onclick="goToStep(0)">Старт</button>
+        <button class="nav-pill" onclick="goToStep(1)">1. Окно редактора</button>
+        <button class="nav-pill" onclick="goToStep(2)">2. Основы редактирования</button>
+        <button class="nav-pill" onclick="goToStep(3)">3. Практикум</button>
+        <button class="nav-pill" onclick="goToStep(4)">4. Итоговый тест</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ШАГ 0: ВВЕДЕНИЕ -->
+    <section class="module active" id="step-0">
+      <div class="card">
+        <span class="time-tag">Самостоятельный урок • 45 минут</span>
+        <h1>Интерфейс текстового процессора. Основы редактирования текста</h1>
+        <p>Привет! Сегодня ты узнаешь, как устроено окно текстового процессора (программы для работы с текстом) и научишься главному умению любого писателя за компьютером — <strong>редактированию текста</strong>.</p>
+        <p>Внутри тебя ждут интерактивный макет программы, симулятор клавиш удаления и тренажёр исправления ошибок.</p>
+
+        <div class="callout">
+          <strong>План урока на 45 минут:</strong><br />
+          1. Изучить все части окна текстового процессора.<br />
+          2. Разобраться, чем отличаются клавиши <code>Backspace</code> и <code>Delete</code>.<br />
+          3. Исправить ошибки в тексте на практикуме и пройти итоговый тест (8 вопросов).
+        </div>
+
+        <label for="studentNameInput"><strong>Введи свою фамилию, имя и класс:</strong></label>
+        <input type="text" id="studentNameInput" class="input-field" placeholder="Например: Ковалёва Соня, 3-А" />
+
+        <div class="nav-footer">
+          <span></span>
+          <button class="btn" onclick="startLesson()">Начать урок →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 1: ИНТЕРФЕЙС ТЕКСТОВОГО ПРОЦЕССОРА -->
+    <section class="module" id="step-1">
+      <div class="card">
+        <span class="time-tag">Модуль 1 • Рекомендуемое время: 10 минут</span>
+        <h2>1. Интерфейс текстового процессора</h2>
+        <p><strong>Интерфейс</strong> — это внешний вид окна программы, с помощью которого человек общается с компьютером и управляет его работой.</p>
+        <p>У разных текстовых процессоров (Microsoft Word, LibreOffice Writer, Яндекс Документы) окна очень похожи и состоят из одинаковых главных частей.</p>
+
+        <div class="interactive-zone">
+          <div class="interactive-title">Интерактивное окно: Нажми на любую часть программы, чтобы узнать её название</div>
+
+          <div class="mock-window">
+            <!-- 1. Строка заголовка -->
+            <div class="mw-part mw-titlebar selected-part" id="mw-title" onclick="inspectWindowPart('title')">
+              <span>📄 Сказка_о_царе_Салтане.docx — Текстовый процессор</span>
+              <div class="mw-win-btns">
+                <span class="mw-win-btn">—</span>
+                <span class="mw-win-btn">□</span>
+                <span class="mw-win-btn" style="background:#dc2626;">✕</span>
+              </div>
+            </div>
+
+            <!-- 2. Лента инструментов -->
+            <div class="mw-part mw-ribbon" id="mw-ribbon" onclick="inspectWindowPart('ribbon')">
+              <span class="mw-tool-chip">💾 Сохранить</span>
+              <span class="mw-tool-chip">↶ Отменить</span>
+              <span class="mw-tool-chip"><b>Ж</b> <i>К</i> <u>Ч</u></span>
+              <span class="mw-tool-chip">🖼️ Вставить картинку</span>
+            </div>
+
+            <!-- 3. Рабочая область и 4. Полоса прокрутки -->
+            <div class="mw-body">
+              <div class="mw-part mw-page" id="mw-page" onclick="inspectWindowPart('page')">
+                Три девицы под окном<br />
+                Пряли поздно вечерком<span class="blink-cursor"></span>
+              </div>
+              <div class="mw-part mw-scrollbar" id="mw-scroll" onclick="inspectWindowPart('scroll')" title="Полоса прокрутки">
+                <div class="mw-scroll-thumb"></div>
+              </div>
+            </div>
+
+            <!-- 5. Строка состояния -->
+            <div class="mw-part mw-statusbar" id="mw-status" onclick="inspectWindowPart('status')">
+              <span>Страница 1 из 3 • Слов: 6</span>
+              <span>Язык: Русский • Масштаб: 100%</span>
+            </div>
+          </div>
+
+          <div class="info-box" id="winPartDesc">
+            <strong>1. Строка заголовка (самая верхняя полоса)</strong>
+            Показывает имя открытого файла и название программы. Справа находятся три кнопки управления окном: <strong>Свернуть (—)</strong>, <strong>Развернуть (□)</strong> и <strong>Закрыть (✕)</strong>.
+          </div>
+
+          <hr style="margin: 18px 0; border: none; border-top: 1px solid #cbd5e1;" />
+
+          <div class="interactive-title">Тренажёр: Угадай элемент окна по описанию</div>
+          <div id="m1Container"></div>
+          <button class="btn btn-sm" onclick="checkM1()">Проверить ответы</button>
+          <div class="feedback" id="m1Feedback"></div>
+        </div>
+
+        <div class="nav-footer">
+          <button class="btn btn-secondary" onclick="goToStep(0)">← Назад</button>
+          <button class="btn" onclick="goToStep(2)">Дальше: Основы редактирования →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 2: ОСНОВЫ РЕДАКТИРОВАНИЯ ТЕКСТА -->
+    <section class="module" id="step-2">
+      <div class="card">
+        <span class="time-tag">Модуль 2 • Рекомендуемое время: 12 минут</span>
+        <h2>2. Основы редактирования текста</h2>
+        <p><strong>Редактирование текста</strong> — это исправление ошибок и внесение изменений в набранный текст (удаление лишних букв, вставка пропущенных слов, деление на абзацы).</p>
+
+        <div class="grid-2">
+          <div class="info-box">
+            <strong>Вставка пропущенного символа</strong>
+            Поставь курсор (<code>|</code>) в то место, где не хватает буквы или пробела, и нажми нужную клавишу. Текст справа аккуратно раздвинется.
+          </div>
+          <div class="info-box">
+            <strong>Разделение и соединение строк</strong>
+            Чтобы разделить строку на две, поставь курсор в место разрыва и нажми <strong>Enter</strong>. Чтобы соединить две строчки в одну, сотри невидимый знак конца строки клавишей <strong>Backspace</strong> или <strong>Delete</strong>.
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <strong>Две клавиши-ластика — не перепутай!</strong><br />
+          • Клавиша <strong>Backspace (←)</strong> стирает один символ <strong>СЛЕВА</strong> от курсора.<br />
+          • Клавиша <strong>Delete (Del)</strong> стирает один символ <strong>СПРАВА</strong> от курсора.
+        </div>
+
+        <div class="interactive-zone">
+          <div class="interactive-title">Симулятор курсора: Испробуй Backspace и Delete!</div>
+          <p style="font-size: 0.94rem;">Посмотри на слово на экране и курсор <strong style="color:#d97706;">|</strong> между буквами. Нажимай на кнопки, чтобы увидеть, какая буква исчезнет:</p>
+
+          <div class="cursor-stage" id="cursorStageDisplay">М О Л О <span class="stage-cursor">|</span> Д К О</div>
+
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;">
+            <button class="btn btn-sm btn-secondary" onclick="moveSimCursor(-1)">← Сдвинуть курсор влево</button>
+            <button class="btn btn-sm btn-secondary" onclick="moveSimCursor(1)">Сдвинуть курсор вправо →</button>
+            <button class="btn btn-sm" onclick="pressSimBackspace()">⌫ Backspace (слева)</button>
+            <button class="btn btn-sm" onclick="pressSimDelete()">⌦ Delete (справа)</button>
+            <button class="btn btn-sm btn-secondary" onclick="resetSimWord()">⟲ Вернуть слово</button>
+          </div>
+          <div class="feedback" id="simWordFeedback" style="text-align: center;"></div>
+
+          <hr style="margin: 18px 0; border: none; border-top: 1px solid #cbd5e1;" />
+
+          <div class="interactive-title">Мини-проверка: Какую клавишу нажать?</div>
+          <div id="m2Container"></div>
+          <button class="btn btn-sm" onclick="checkM2()">Проверить</button>
+          <div class="feedback" id="m2Feedback"></div>
+        </div>
+
+        <div class="nav-footer">
+          <button class="btn btn-secondary" onclick="goToStep(1)">← Назад</button>
+          <button class="btn" onclick="goToStep(3)">К Практикуму «Юный редактор» →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 3: ПРАКТИКУМ РЕДАКТИРОВАНИЯ -->
+    <section class="module" id="step-3">
+      <div class="card">
+        <span class="time-tag">Модуль 3 • Рекомендуемое время: 15 минут</span>
+        <h2>3. Практикум «Юный редактор»</h2>
+        <p>Выполни два практических задания прямо в окне программы. Внимательно проверяй каждую букву и пробел!</p>
+
+        <div class="interactive-zone">
+          <div class="interactive-title">Задание 3.1: Исправь ошибки в загадке</div>
+          <p style="font-size: 0.94rem;">Незнайка печатал загадку и допустил <strong>4 ошибки</strong> (лишние буквы, слипшиеся слова и пропавший пробел). Исправь текст в белом окне так, чтобы получилось точно так же, как в образце:</p>
+          <div class="callout" style="margin: 8px 0;">
+            <strong>Образец без ошибок:</strong><br />
+            Без языка, а говорит, без ушей, а слышит.
+          </div>
+
+          <div class="editor-frame">
+            <div class="editor-head">
+              <span>📄 Загадка.docx</span>
+              <button class="btn btn-sm btn-secondary" onclick="resetPracticeText()">⟲ Вернуть исходный текст</button>
+            </div>
+            <textarea id="practiceEditorArea" class="editor-area">Без языыка, аговорит, без ушшей, а слышит.</textarea>
+          </div>
+
+          <button class="btn btn-sm" onclick="checkPracticeText()">Проверить исправления</button>
+          <div class="feedback" id="m3aFeedback"></div>
+        </div>
+
+        <div class="interactive-zone">
+          <div class="interactive-title">Задание 3.2: Спаси текст кнопкой «Отменить» (↶)</div>
+          <p style="font-size: 0.94rem;">Ой! Кот пробежал по клавиатуре и случайно стёр почти весь рассказ! В текстовом процессоре для таких случаев есть волшебная кнопка <strong>«Отменить» (↶)</strong> на ленте инструментов. Нажми её, чтобы вернуть пропавший текст:</p>
+
+          <div class="editor-frame">
+            <div class="editor-head">
+              <span>📄 Мой_рассказ.docx</span>
+              <button class="btn btn-sm" id="undoSimBtn" onclick="triggerUndoSim()">↶ Отменить последнее действие</button>
+            </div>
+            <div id="undoTextPreview" style="padding: 16px; min-height: 90px; font-size: 1.05rem; color: var(--danger); font-weight: 700;">
+              фываолдж... (Текст случайно удалён!)
+            </div>
+          </div>
+          <div class="feedback" id="m3bFeedback"></div>
+        </div>
+
+        <div class="nav-footer">
+          <button class="btn btn-secondary" onclick="goToStep(2)">← Назад</button>
+          <button class="btn" onclick="goToStep(4)">Перейти к итоговому тесту →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ШАГ 4: ИТОГОВЫЙ ТЕСТ -->
+    <section class="module" id="step-4">
+      <div class="card">
+        <span class="time-tag">Модуль 4 • Рекомендуемое время: 8 минут</span>
+        <h2>4. Итоговый проверочный тест</h2>
+        <p>Ответь на 8 вопросов по теме урока, чтобы получить именную грамоту с оценкой!</p>
+
+        <div id="finalQuizContainer"></div>
+
+        <button class="btn btn-success" style="width: 100%; margin-top: 10px; font-size: 1.08rem; padding: 14px;" onclick="finishLesson()">Завершить урок и получить оценку</button>
+
+        <div id="certificateSection" style="display: none;">
+          <div class="cert-box">
+            <div style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 800;">
+              Грамота за прохождение урока • Информатика 3 класс
+            </div>
+            <h2 id="certStudentName" style="margin: 8px 0; color: var(--text);">Ученик 3 класса</h2>
+            <p style="margin-bottom: 4px;">Тема: «Интерфейс текстового процессора. Основы редактирования текста»</p>
+            <div class="cert-grade" id="certGradeText">Оценка: 5 (Отлично!)</div>
+            <p id="certStats" style="font-weight: 700;"></p>
+            <p id="certCode" style="font-family: monospace; font-size: 0.92rem; color: var(--text-muted);"></p>
+            <div class="callout success" style="text-align: left; margin-top: 12px;">
+              Сделай снимок экрана (скриншот) этой грамоты и отправь учителю!
+            </div>
+          </div>
+        </div>
+
+        <div class="nav-footer">
+          <button class="btn btn-secondary" onclick="goToStep(3)">← Вернуться к практикуму</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetAll()">Пройти заново</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    // --- СОСТОЯНИЕ ---
+    const state = {
+      currentStep: 0,
+      completedSteps: [false, false, false, false, false],
+      secondsElapsed: 0,
+      studentName: "",
+      m3aDone: false,
+      m3bDone: false
+    };
+
+    // --- ТАЙМЕР ---
+    setInterval(() => {
+      state.secondsElapsed++;
+      const m = String(Math.floor(state.secondsElapsed / 60)).padStart(2, "0");
+      const s = String(state.secondsElapsed % 60).padStart(2, "0");
+      document.getElementById("timerDisplay").textContent = `Время урока: ${m}:${s} / 45:00`;
+    }, 1000);
+
+    // --- НАВИГАЦИЯ ---
+    function goToStep(idx) {
+      document.querySelectorAll(".module").forEach((el, i) => el.classList.toggle("active", idx === i));
+      document.querySelectorAll(".nav-pill").forEach((pill, i) => {
+        pill.classList.toggle("active", idx === i);
+        pill.classList.toggle("done", state.completedSteps[i]);
+      });
+      state.currentStep = idx;
+      updateProgress();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function markStepDone(idx) {
+      state.completedSteps[idx] = true;
+      const pills = document.querySelectorAll(".nav-pill");
+      if (pills[idx]) pills[idx].classList.add("done");
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const done = state.completedSteps.filter(Boolean).length;
+      const pct = Math.min(100, Math.round((done / 4) * 100));
+      document.getElementById("progressBar").style.width = `${pct}%`;
+    }
+
+    function startLesson() {
+      const val = document.getElementById("studentNameInput").value.trim();
+      state.studentName = val || "Ученик 3 класса";
+      markStepDone(0);
+      goToStep(1);
+    }
+
+    // --- МОДУЛЬ 1: ИНТЕРАКТИВНОЕ ОКНО И ТРЕНАЖЁР ---
+    const winPartsInfo = {
+      title: "<strong>1. Строка заголовка (самая верхняя полоса)</strong>Показывает имя открытого файла и название программы. Справа находятся три кнопки управления окном: <strong>Свернуть (—)</strong>, <strong>Развернуть (□)</strong> и <strong>Закрыть (✕)</strong>.",
+      ribbon: "<strong>2. Лента (панель инструментов)</strong>Содержит кнопки для работы с документом: сохранить файл, отменить ошибочное действие, изменить внешний вид букв или вставить рисунок.",
+      page: "<strong>3. Рабочая область (белый лист) и курсор</strong>Главное поле, на котором мы набираем и редактируем текст. Мигающая вертикальная палочка (<strong>|</strong>) — это текстовый курсор.",
+      scroll: "<strong>4. Полоса прокрутки</strong>Помогает быстро перелистывать длинный документ вверх и вниз, если весь текст не помещается на одном экране.",
+      status: "<strong>5. Строка состояния (самая нижняя полоса)</strong>Подсказывает полезные сведения: сколько в документе страниц и слов, какой язык клавиатуры включён и какой выбран масштаб."
+    };
+
+    function inspectWindowPart(partKey) {
+      document.querySelectorAll(".mw-part").forEach(el => el.classList.remove("selected-part"));
+      const target = document.getElementById(`mw-${partKey}`);
+      if (target) target.classList.add("selected-part");
+      document.getElementById("winPartDesc").innerHTML = winPartsInfo[partKey];
+    }
+
+    const m1Data = [
+      { text: "Самая верхняя полоса окна, где написано имя файла и есть кнопка закрытия (✕)", answer: "Строка заголовка" },
+      { text: "Белый лист в центре окна, на котором печатают текст", answer: "Рабочая область" },
+      { text: "Полоса с кнопками команд («Сохранить», «Отменить», «Вставить»)", answer: "Лента инструментов" },
+      { text: "Полоса в самом низу окна, где видно количество страниц и слов", answer: "Строка состояния" }
+    ];
+    const m1User = {};
+
+    function renderM1() {
+      const box = document.getElementById("m1Container");
+      box.innerHTML = "";
+      const opts = ["Строка заголовка", "Лента инструментов", "Рабочая область", "Строка состояния"];
+      m1Data.forEach((item, idx) => {
+        const div = document.createElement("div");
+        div.className = "sort-item";
+        div.innerHTML = `
+          <div class="sort-item-text">${idx + 1}. ${item.text}</div>
+          <div class="sort-buttons" id="m1-btns-${idx}">
+            ${opts.map(o => `<button class="choice-btn" onclick="selM1(${idx}, '${o}', this)">${o}</button>`).join("")}
+          </div>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    function selM1(idx, opt, btn) {
+      m1User[idx] = opt;
+      document.getElementById(`m1-btns-${idx}`).querySelectorAll(".choice-btn").forEach(b => b.classList.remove("selected", "correct", "wrong"));
+      btn.classList.add("selected");
+    }
+
+    function checkM1() {
+      let ok = 0;
+      m1Data.forEach((item, idx) => {
+        const chosen = m1User[idx];
+        document.getElementById(`m1-btns-${idx}`).querySelectorAll(".choice-btn").forEach(b => {
+          b.classList.remove("selected", "correct", "wrong");
+          if (b.textContent === chosen) {
+            if (chosen === item.answer) { b.classList.add("correct"); ok++; }
+            else { b.classList.add("wrong"); }
+          }
+        });
+      });
+      const fb = document.getElementById("m1Feedback");
+      if (ok === m1Data.length) {
+        fb.style.color = "var(--success)";
+        fb.textContent = "Молодец! Все 4 части окна текстового процессора названы правильно!";
+        markStepDone(1);
+      } else {
+        fb.style.color = "#b45309";
+        fb.textContent = `Правильно: ${ok} из ${m1Data.length}. Поправь красные кнопки и проверь снова!`;
+      }
+    }
+    renderM1();
+
+    // --- МОДУЛЬ 2: СИМУЛЯТОР КУРСОРА И ТРЕНАЖЁР ---
+    let simLetters = ["М", "О", "Л", "О", "Д", "К", "О"];
+    let simPos = 4; // курсор между О и Д -> МОЛО|ДКО
+
+    function renderSimStage() {
+      const left = simLetters.slice(0, simPos).join(" ");
+      const right = simLetters.slice(simPos).join(" ");
+      document.getElementById("cursorStageDisplay").innerHTML =
+        `${left ? left + " " : ""}<span class="stage-cursor">|</span>${right ? " " + right : ""}`;
+    }
+
+    function moveSimCursor(delta) {
+      simPos = Math.max(0, Math.min(simLetters.length, simPos + delta));
+      renderSimStage();
+    }
+
+    function pressSimBackspace() {
+      if (simPos > 0) {
+        simLetters.splice(simPos - 1, 1);
+        simPos--;
+        renderSimStage();
+        checkSimWordGoal();
+      }
+    }
+
+    function pressSimDelete() {
+      if (simPos < simLetters.length) {
+        simLetters.splice(simPos, 1);
+        renderSimStage();
+        checkSimWordGoal();
+      }
+    }
+
+    function resetSimWord() {
+      simLetters = ["М", "О", "Л", "О", "Д", "К", "О"];
+      simPos = 4;
+      document.getElementById("simWordFeedback").textContent = "";
+      renderSimStage();
+    }
+
+    function checkSimWordGoal() {
+      const word = simLetters.join("");
+      const fb = document.getElementById("simWordFeedback");
+      if (word === "МОЛОКО") {
+        fb.style.color = "var(--success)";
+        fb.textContent = "Ура! Лишняя буква «Д» удалена, получилось слово МОЛОКО!";
+      } else {
+        fb.style.color = "var(--text-muted)";
+        fb.textContent = `Сейчас получилось: ${word}. Попробуй получить слово МОЛОКО!`;
+      }
+    }
+
+    const m2Data = [
+      { text: "Удалить лишнюю букву СЛЕВА от мигающего курсора", answer: "Backspace" },
+      { text: "Удалить лишнюю букву СПРАВА от мигающего курсора", answer: "Delete" },
+      { text: "Разделить одно длинное предложение на две строчки (новый абзац)", answer: "Enter" },
+      { text: "Сделать отступ между двумя словами, которые слиплись вместе", answer: "Пробел" }
+    ];
+    const m2User = {};
+
+    function renderM2() {
+      const box = document.getElementById("m2Container");
+      box.innerHTML = "";
+      const opts = ["Backspace", "Delete", "Enter", "Пробел"];
+      m2Data.forEach((item, idx) => {
+        const div = document.createElement("div");
+        div.className = "sort-item";
+        div.innerHTML = `
+          <div class="sort-item-text">${idx + 1}. ${item.text}</div>
+          <div class="sort-buttons" id="m2-btns-${idx}">
+            ${opts.map(o => `<button class="choice-btn" onclick="selM2(${idx}, '${o}', this)">${o}</button>`).join("")}
+          </div>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    function selM2(idx, opt, btn) {
+      m2User[idx] = opt;
+      document.getElementById(`m2-btns-${idx}`).querySelectorAll(".choice-btn").forEach(b => b.classList.remove("selected", "correct", "wrong"));
+      btn.classList.add("selected");
+    }
+
+    function checkM2() {
+      let ok = 0;
+      m2Data.forEach((item, idx) => {
+        const chosen = m2User[idx];
+        document.getElementById(`m2-btns-${idx}`).querySelectorAll(".choice-btn").forEach(b => {
+          b.classList.remove("selected", "correct", "wrong");
+          if (b.textContent === chosen) {
+            if (chosen === item.answer) { b.classList.add("correct"); ok++; }
+            else { b.classList.add("wrong"); }
+          }
+        });
+      });
+      const fb = document.getElementById("m2Feedback");
+      if (ok === m2Data.length) {
+        fb.style.color = "var(--success)";
+        fb.textContent = "Отлично! Ты знаешь, как работает каждая клавиша редактирования!";
+        markStepDone(2);
+      } else {
+        fb.style.color = "#b45309";
+        fb.textContent = `Правильно: ${ok} из ${m2Data.length}. Поправь красные кнопки и попробуй снова!`;
+      }
+    }
+    renderM2();
+
+    // --- МОДУЛЬ 3: ПРАКТИКУМ ---
+    function resetPracticeText() {
+      document.getElementById("practiceEditorArea").value = "Без языыка, аговорит, без ушшей, а слышит.";
+      document.getElementById("m3aFeedback").textContent = "";
+    }
+
+    function checkPracticeText() {
+      const raw = document.getElementById("practiceEditorArea").value.trim().replace(/\s+/g, " ");
+      const target = "Без языка, а говорит, без ушей, а слышит.";
+      const fb = document.getElementById("m3aFeedback");
+
+      if (raw === target) {
+        state.m3aDone = true;
+        fb.style.color = "var(--success)";
+        fb.textContent = "Браво! Все 4 ошибки исправлены, текст полностью совпадает с образцом!";
+        if (state.m3aDone && state.m3bDone) markStepDone(3);
+      } else {
+        fb.style.color = "var(--danger)";
+        fb.textContent = "Пока остались неточности. Проверь слова «языка», «а говорит» (нужен пробел) и «ушей».";
+      }
+    }
+
+    function triggerUndoSim() {
+      state.m3bDone = true;
+      const box = document.getElementById("undoTextPreview");
+      box.style.color = "var(--text)";
+      box.style.fontWeight = "600";
+      box.innerHTML = "Летом мы всей семьёй ездили в лес за грибами. Под старой берёзой я нашёл большой крепкий подосиновик!";
+      const fb = document.getElementById("m3bFeedback");
+      fb.style.color = "var(--success)";
+      fb.textContent = "Отлично! Кнопка «Отменить» вернула весь рассказ на место!";
+      if (state.m3aDone && state.m3bDone) markStepDone(3);
+    }
+
+    // --- МОДУЛЬ 4: ИТОГОВЫЙ ТЕСТ ---
+    const quizData = [
+      {
+        q: "1. Что такое интерфейс программы?",
+        options: [
+          "Внешний вид окна программы, через который человек общается с компьютером",
+          "Провод, которым клавиатура подключается к компьютеру",
+          "Название сказки, напечатанной в документе"
+        ],
+        correct: 0
+      },
+      {
+        q: "2. Где в окне текстового процессора написано имя файла и находятся кнопки управления окном (— , □ , ✕)?",
+        options: ["В строке состояния", "В строке заголовка", "На полосе прокрутки"],
+        correct: 1
+      },
+      {
+        q: "3. Как называется главное белое поле в центре окна, где мы набираем текст?",
+        options: ["Рабочая область", "Строка заголовка", "Лента инструментов"],
+        correct: 0
+      },
+      {
+        q: "4. Что такое редактирование текста?",
+        options: [
+          "Выключение компьютера после работы",
+          "Исправление ошибок и внесение изменений в текст",
+          "Печать листа на принтере"
+        ],
+        correct: 1
+      },
+      {
+        q: "5. Какую букву стирает клавиша Backspace (←)?",
+        options: [
+          "Букву СЛЕВА от курсора",
+          "Букву СПРАВА от курсора",
+          "Самую первую букву на странице"
+        ],
+        correct: 0
+      },
+      {
+        q: "6. Какую букву стирает клавиша Delete?",
+        options: [
+          "Букву СЛЕВА от курсора",
+          "Букву СПРАВА от курсора",
+          "Никакую, она ставит пробел"
+        ],
+        correct: 1
+      },
+      {
+        q: "7. Как разделить одну длинную строчку на два абзаца?",
+        options: [
+          "Поставить курсор в нужное место и нажать клавишу Enter",
+          "Нажать клавишу Пробел 10 раз",
+          "Закрыть окно программы"
+        ],
+        correct: 0
+      },
+      {
+        q: "8. Какая кнопка на панели инструментов спасёт, если ты случайно удалил нужный абзац текста?",
+        options: ["Кнопка «Отменить» (↶)", "Кнопка «Закрыть» (✕)", "Кнопка «Свернуть» (—)"],
+        correct: 0
+      }
+    ];
+    const quizAnswers = {};
+
+    function renderQuiz() {
+      const box = document.getElementById("finalQuizContainer");
+      box.innerHTML = "";
+      quizData.forEach((item, qIdx) => {
+        const div = document.createElement("div");
+        div.className = "quiz-q";
+        div.innerHTML = `
+          <div><strong>${item.q}</strong></div>
+          <div id="quiz-opts-${qIdx}">
+            ${item.options.map((opt, oIdx) => `
+              <button class="quiz-opt" onclick="selectQuiz(${qIdx}, ${oIdx}, this)">${opt}</button>
+            `).join("")}
+          </div>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    function selectQuiz(qIdx, oIdx, btn) {
+      quizAnswers[qIdx] = oIdx;
+      const box = document.getElementById(`quiz-opts-${qIdx}`);
+      box.querySelectorAll(".quiz-opt").forEach(b => b.classList.remove("selected", "correct", "wrong"));
+      btn.classList.add("selected");
+    }
+
+    function finishLesson() {
+      if (Object.keys(quizAnswers).length < quizData.length) {
+        alert("Пожалуйста, ответь на все 8 вопросов теста!");
+        return;
+      }
+
+      let score = 0;
+      quizData.forEach((item, qIdx) => {
+        const chosen = quizAnswers[qIdx];
+        const box = document.getElementById(`quiz-opts-${qIdx}`);
+        box.querySelectorAll(".quiz-opt").forEach((b, oIdx) => {
+          b.classList.remove("selected", "correct", "wrong");
+          if (oIdx === item.correct) b.classList.add("correct");
+          else if (oIdx === chosen && chosen !== item.correct) b.classList.add("wrong");
+        });
+        if (chosen === item.correct) score++;
+      });
+
+      let grade = 2;
+      let label = "Попробуй ещё раз!";
+      if (score >= 7) { grade = 5; label = "Отлично!"; }
+      else if (score >= 5) { grade = 4; label = "Хорошо!"; }
+      else if (score >= 4) { grade = 3; label = "Удовлетворительно"; }
+
+      markStepDone(4);
+      const mins = Math.max(1, Math.round(state.secondsElapsed / 60));
+      const d = new Date();
+      const code = `INF3-EDIT-${score}${grade}-${d.getDate()}${d.getMonth() + 1}`;
+
+      document.getElementById("certStudentName").textContent = state.studentName || "Ученик 3 класса";
+      document.getElementById("certGradeText").textContent = `Оценка: ${grade} (${label})`;
+      document.getElementById("certStats").textContent = `Правильных ответов: ${score} из ${quizData.length} • Время урока: ~${mins} мин.`;
+      document.getElementById("certCode").textContent = `Код проверки: ${code}`;
+      document.getElementById("certificateSection").style.display = "block";
+      document.getElementById("certificateSection").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function resetAll() {
+      if (confirm("Начать урок заново и сбросить все ответы?")) {
+        location.reload();
+      }
+    }
+
+    renderQuiz();
+  </script>
+</body>
+</html>
